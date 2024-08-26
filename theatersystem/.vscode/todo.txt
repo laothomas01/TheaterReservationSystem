@@ -1,0 +1,7 @@
+[] load reservations.txt
+    [] if file not exist or file is empty, system does not load anything
+        [] initialize system 
+    [] if file not empty or exists, load file. 
+        [] update system information
+        [] update user information 
+
