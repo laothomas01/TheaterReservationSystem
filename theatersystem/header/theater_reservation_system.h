@@ -28,7 +28,6 @@ class TheaterReservationSystem
         void SignIn();
         void ExitSystem(bool start);
         void ViewReservations();
-        void CancelReservation(bool start);
         void CompleteTransaction();
         void TransactionMode(User *user);
 
@@ -39,7 +38,9 @@ class TheaterReservationSystem
         TheaterReservationSystem();
         ~TheaterReservationSystem();
         void ReserveSeats(User* user);
+        void CancelReservation(User* user);
         void AddShow(Show show);
+        
         void AddUser(User user);
         void DisplayShows() const;
         void DisplayUsers() const;
@@ -55,6 +56,9 @@ class TheaterReservationSystem
         Show* findShow(const std::string& date, const std::string& time);
         void UpdatePassword(std::string username,std::string password);
         void ViewReservations(User* user);
+        void Out(User* user);
+        
+
 
 
 

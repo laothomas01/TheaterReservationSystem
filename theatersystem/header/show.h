@@ -59,6 +59,7 @@ class Show
         bool HasSeat(std::string seatId);
         Seat* findSeat(std::string seatId);
         void UpdateSeatAvailability(bool available, const std::string& seatId);
+        std::vector<Seat> GetSeats() const;
         // void UpdateSeatAvailability(std::string seatId,bool available);
         // void UpdateSeatPrice(std::string seatId,double price);
         // bool IsValidSeat(std::string seatId);

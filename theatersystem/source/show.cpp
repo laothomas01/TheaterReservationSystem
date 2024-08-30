@@ -80,6 +80,11 @@ void Show::RemoveSeat(std::string seatId)
     }
     // Seat s = std::find(seats_.begin(),seats_.end(),)
 }
+
+std::vector<Seat> Show::GetSeats() const
+{
+    return seats_;
+}
 // void Show::UpdateSeatAvailability(std::string seatId,bool available)
 // {
 //     for(Seat& seat : seats_)

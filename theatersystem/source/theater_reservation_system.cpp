@@ -1,56 +1,18 @@
 
-
-// std::vector<std::string> TheaterReservationSystem::SingleDelimeterStringSplit(std::string str, char delimeter)
-// {
-//     std::vector<std::string> tokens;
-//     std::string token;
-//     std::stringstream ss(str);
-//     while(std::getline(ss,token,delimeter))
-//     {
-//         tokens.push_back(token);
-//     }
-//     return tokens;
-// }
-
-// void TheaterReservationSystem:: AddUser(std::string username, std::string password)
-// {
-//     if(IsUsernameTaken(username,password))
-//     {
-//         std::cout << "Username is already taken" << std::endl;
-//     }
-//     else
-//     {
-//         std::cout << "Successfully created account" << std::endl;
-//         User user(username,password);
-//         userDatabase_.push_back(user);
-//     }
-// }
-
-// bool TheaterReservationSystem:: IsUsernameTaken(std::string username, std::string password)
-// {
-//     for(User user : userDatabase_)
-//     {
-//         if(user.GetUsername() == username && user.GetPassword() == password)
-//         {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
-
 /*
 features:
-[] sign up
-[] sign in
-[] exit system
-[] transaction mode
-    [] reservation session
-    [] view entire reservations
-    [] cancel reservation
-    [] out
-        [] display receipt for the transaction
-        [] handle group discounts
+[X] sign up
+[X] sign in
+[X] exit system
+[X] transaction mode
+    [X] reservation session
+    [X] view entire reservations
+    [X] cancel reservation
+    [X] out
+        [X] display receipt for the transaction
+        [X] handle group discounts
     [] load data from .txt file
+        - TOO FUCKING LAZY 
  */
 #include "theater_reservation_system.h"
 
@@ -443,7 +405,10 @@ void TheaterReservationSystem::Start(bool start)
     AddUser(user);
     User *login = FindUserLogin("a", "b");
     ReserveSeats(login);
-    login->DisplayReservations();
+    // ViewReservations(login);
+    // CancelReservation(login);
+    // ViewReservations(login);
+    Out(login);
 }
 void TheaterReservationSystem::InitialMenu(bool start)
 {
@@ -555,38 +520,26 @@ void TheaterReservationSystem::ViewReservations(User *user)
 }
 void TheaterReservationSystem::ReserveSeats(User *user)
 {
-
-    // std::map<std::string, std::vector<std::string>> reservations;
-
-    // // this entire session is 1 transaction session
-    // // this means all seats are currently available until end of reservation session and end of transaction session
-    // // lets do 2 reservation sessions
-
-    std::cout << "Reservation Session 1" << std::endl;
-    DisplayShows();
-    std::string date("");
-    std::string time("");
-
     std::map<std::string, std::vector<std::string>> reservations;
+
     while (true)
     {
+        DisplayShows();
+        std::string date("");
+        std::string time("");
         std::cout << "Enter a date: " << std::endl;
         std::cin >> date;
         std::cout << "Enter a time: " << std::endl;
         std::cin >> time;
         Show *show = findShow(date, time);
-        std::vector<std::string> selectedSeats;
-
         if (show)
         {
+            std::vector<std::string> selectedSeats;
             show->DisplaySeats();
             bool selectingSeats(true);
-            bool done(false);
-
             while (selectingSeats)
             {
                 std::cout << "Enter a seat to reserve: ( Enter Q to finish) " << std::endl;
-
                 std::string seatId("");
                 std::cin >> seatId;
                 if (seatId == "Q" || seatId == "q")
@@ -599,13 +552,23 @@ void TheaterReservationSystem::ReserveSeats(User *user)
 
                     break;
                 }
-
                 Seat *seat = show->findSeat(seatId);
                 if (seat)
                 {
                     if (seat->IsAvailabile())
                     {
-                        if (std::find(selectedSeats.begin(), selectedSeats.end(), seatId) != selectedSeats.end())
+                        std::string dateTime = date + " " + time;
+                        std::vector<std::string> reservedSeats = reservations[dateTime];
+
+                        //@TODO: have to also check if seat has been already selected/reserved by current customer
+                        // ex: customer finishes reserving but hasnt cashed out the transaction
+                        // if you selected a seat to reserve, cannot select again
+                        if (std::find(reservedSeats.begin(), reservedSeats.end(), seatId) != reservedSeats.end())
+                        {
+                            std::cout << "You already selected this seat" << std::endl;
+                        }
+                        // if you selected a seat to reserve, cannot select again
+                        else if (std::find(selectedSeats.begin(), selectedSeats.end(), seatId) != selectedSeats.end())
                         {
                             std::cout << "You already selected this seat" << std::endl;
                         }
@@ -629,7 +592,6 @@ void TheaterReservationSystem::ReserveSeats(User *user)
         {
             std::cout << "Cannot find show" << std::endl;
         }
-
         std::cout << "Do you want to make another reservation? (Y/N)" << std::endl;
         char choice(' ');
         std::cin >> choice;
@@ -643,40 +605,27 @@ void TheaterReservationSystem::ReserveSeats(User *user)
                 std::size_t spacePos = datetime.find(' ');
                 if (spacePos != std::string::npos)
                 {
-                    // Extract date and time
+                    // Extract the date and time
                     std::string dateString = datetime.substr(0, spacePos);
                     std::string timeString = datetime.substr(spacePos + 1);
-                    // Output the reserved seats
-                    std::cout << dateString << std::endl;
-                    std::cout << timeString << std::endl;
                     Show *currentShow = findShow(dateString, timeString);
-
                     std::tm tm_date = {};
                     std::istringstream ss(dateString);
                     ss >> std::get_time(&tm_date, "%Y-%m-%d");
-                    if (ss.fail())
+                    std::time_t date = std::mktime(&tm_date);
+                    std::tm tm_time = {};
+                    std::istringstream ss2(timeString);
+                    std::time_t time = std::mktime(&tm_time);
+                    ss2 >> std::get_time(&tm_time, "%H:%M");
+                    if (ss.fail() || ss2.fail())
                     {
                         std::cerr << "Failed to parse date!" << std::endl;
                         break;
                     }
-                    // Convert the parsed date to a time_t value
-                    std::time_t date = std::mktime(&tm_date);
-                    std::cout << "Checking year" << std::endl;
-                    std::cout << tm_date.tm_year + 1900 << std::endl;
-
-                    std::tm tm_time = {};
-                    std::istringstream ss2(timeString);
-                    ss2 >> std::get_time(&tm_time, "%H:%M");
-                    if (ss2.fail())
-                    {
-                        std::cerr << "Failed to parse time!" << std::endl;
-                        break;
-                    }
-                    std::time_t time = std::mktime(&tm_time);
                     Show reservation(tm_time, tm_date);
                     for (std::string seatId : seats)
                     {
-                        reserveSeat(dateString, timeString, seatId);
+                        // set the reserved seats to unavailable
                         Seat *seat = currentShow->findSeat(seatId);
                         if (seat)
                         {
@@ -688,1170 +637,107 @@ void TheaterReservationSystem::ReserveSeats(User *user)
             }
             break;
         }
+        else if (choice != 'N' && choice != 'Y')
+        {
+            std::cout << "Invalid Input" << std::endl;
+        }
     }
-    // std::string date("2020-12-23");
-    // std::string time("06:30");
+}
+void TheaterReservationSystem::CancelReservation(User *user)
+{
+    std::cout << "You selected Cancel Reservations" << std::endl;
+    std::string date("");
+    std::string time("");
+    while (true)
+    {
+        std::cout << "Enter a date: (or Q to quit) " << std::endl;
+        std::cin >> date;
 
-    // // UpdateSeatAvailability(false,"eb100");
-    // Show *show = findShow(date, time);
-    // if (show)
-    // {
-    //     std::vector<std::string> selectedSeats;
-    //     Seat *seat1 = show->findSeat("eb100");
-    //     Seat *seat2 = show->findSeat("eb98");
-    //     Seat *seat3 = show->findSeat("eb98");
-    //     // UpdateSeatAvailability(false,seat1->GetSeatId());
+        if (date == "Q" || date == "q")
+        {
+            break;
+        }
 
-    //     selectedSeats.push_back(seat2->GetSeatId());
-    //     selectedSeats.push_back(seat3->GetSeatId());
+        std::cout << "Enter a time: (or Q to quit) " << std::endl;
+        std::cin >> time;
 
-    //     // if(!seat1->IsAvailabile())
-    //     // {
-    //     //     std::cout << "Not Available" << std::endl;
-    //     // }
-    //     // else
-    //     // {
-    //     //     selectedSeats.push_back()
-    //     // }
+        if (time == "Q" || date == "q")
+        {
+            break;
+        }
 
-    //     // test already selecting seat
-    //     if (std::find(selectedSeats.begin(), selectedSeats.end(), "eb100") != selectedSeats.end())
-    //     {
-    //         std::cout << "You already selected this seat" << std::endl;
-    //     }
-    //     // Done reserving seats
-    //     if (!selectedSeats.empty())
-    //     {
-    //         std::string datetime = date + " " + time;
-    //         reservations[datetime].insert(reservations[datetime].end(), selectedSeats.begin(), selectedSeats.end());
-    //     }
-
-    //     for (const auto &entry : reservations)
-    //     {
-    //         const std::vector<std::string> &seats = entry.second;
-    //         for (std::string id : seats)
-    //         {
-    //             std::cout << id << std::endl;
-    //         }
-    //     }
-    //     // are you done making reservations?
-
-    //     // no. let's do one more.
-    // }
-    // date = "2020-12-24";
-    // time = "08:30";
-    // show = findShow(date, time);
-
-    // //                 {
-    //                     break;
-    //                 }
-    //                 else
-    //                 {
-    //                     std::cout << "Invalid Input" << std::endl;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     else
-    //     {
-    //         std::cout << "Invalid show" << std::endl;
-    //     }
-
-    //     std::cout << "Do you want to make another reservation? [Y/N]" << std::endl;
-    //     char choice(' ');
-    //     std::cin >> choice;
-    //     choice = (std::toupper(choice));
-
-    //     if (choice == 'N')
-    //     {
-    //         for (const auto &entry : reservations)
-    //         {
-    //             const std::string &datetime = entry.first;
-    //             const std::vector<std::string> &seats = entry.second;
-    //             // Find the space position in the datetime string
-    //             std::size_t spacePos = datetime.find(' ');
-    //             if (spacePos != std::string::npos)
-    //             {
-    //                 // Extract date and time
-    //                 std::string date = datetime.substr(0, spacePos);
-    //                 std::string time = datetime.substr(spacePos + 1);
-    //                 // Output the reserved seats
-    //                 std::cout << date << std::endl;
-    //                 std::cout << time << std::endl;
-    //                 Show *tmp = findShow(date, time);
-    //                 Show reservation(tmp->GetTime(), tmp->GetDate());
-    //                 for (std::string seatId : seats)
-    //                 {
-    //                     Seat* seat = tmp->findSeat(seatId);
-    //                     UpdateSeatAvailability(false,seat->GetSeatId());
-    //                     // reservation.AddSeat(*seat);
-    //                     // std::cout << seat->ToString() << std::endl;
-    //                 }
-    //                 // user->AddReservation(reservation);
-    //             }
-    //         }
-    //         break;
-    //     }
-
-    // }
+        Show *reservation = user->FindReservation(date, time);
+        if (reservation)
+        {
+            bool selectingSeats(true);
+            while (selectingSeats)
+            {
+                reservation->DisplaySeats();
+                std::cout << "Enter a seat id to cancel: (or Q to quit)" << std::endl;
+                std::string seatId("");
+                std::cin >> seatId;
+                if (seatId == "Q" || seatId == "q")
+                {
+                    break;
+                }
+                Seat *seat = reservation->findSeat(seatId);
+                if (seat)
+                {
+                    user->CancelReservation(date, time, seatId);
+                }
+                else
+                {
+                    std::cout << "Cannot seat" << std::endl;
+                }
+            }
+        }
+        else
+        {
+            std::cout << "Cannot find reservation" << std::endl;
+        }
+    }
 }
 
-// void TheaterReservationSystem::UpdatePassword(std::string username, std::string password)
-// {
-// }
-// void TheaterReservationSystem::DisplayShows() const
-// {
-//     for(Show show : showDatabase_)
-//     {
-//         std::cout << show.ShowToString() << std::endl;
-//     }
-// }
-
-// void TheaterReservationSystem:: Start(bool start,std::string filename)
-// {
-//     LoadSystem(filename);
-//     while(start)
-//     {
-//         std::cout << "Sign[U]p Sign[I]n E[X]it" << std::endl;
-//         char choice{' '};
-//         std::cin >> choice;
-//         choice = (std::toupper(choice));
-//         switch(choice)
-//         {
-//             case 'U':
-//                 std::cout << "SignUp" << std::endl;
-//                 SignUp(true);
-//                 break;
-//             case 'I':
-//                 std::cout << "SignIn" << std::endl;
-//                 SignIn(true);
-//                 break;
-//             case 'X':
-//                 std::cout << "Exit" << std::endl;
-//                 break;
-//             default:
-//                 std::cout << "Invalid Input" << std::endl;
-//         }
-//     }
-// }
-
-// void TheaterReservationSystem:: SignUp(bool start)
-// {
-//     while(start)
-//     {
-//         std::string username{""};
-//         std::string password{""};
-//         std::cout << "Enter a username: (or press Q to quit)" << std::endl;
-//         std::cin >> username;
-//         if(username == "q" || username == "Q")
-//         {
-//             break;
-//         }
-//         std::cout << "Enter a password: (or press Q to quit)" << std::endl;
-//         std::cin >> password;
-
-//         if(password == "q" || password == "Q")
-//         {
-//             break;
-//         }
-
-//         if(HasUsername(username,password))
-//         {
-//             std::cout << "Username already taken!" << std::endl;
-//         }
-//         else
-//         {
-//             AddUser(username,password);
-//         }
-//     }
-// }
-// void TheaterReservationSystem::SignIn(bool start)
-// {
-//     while(start)
-//     {
-//         std::string username{""};
-//         std::string password{""};
-//         std::cout << "Enter a username: (or press Q to quit)" << std::endl;
-//         std::cin >> username;
-//         if(username == "q" || username == "Q")
-//         {
-//             break;
-//         }
-//         std::cout << "Enter a password: (or press Q to quit)" << std::endl;
-//         std::cin >> password;
-
-//         if(password == "q" || password == "Q")
-//         {
-//             break;
-//         }
-
-//         if(HasUsername(username,password))
-//         {
-//             std::vector<User>::iterator userIter = userDatabase_.begin();
-//             while(userIter != userDatabase_.end())
-//             {
-//                 if(userIter->GetUsername() == username && userIter->GetPassword() == password)
-//                 {
-//                     break;
-//                 }
-//                 else
-//                 {
-//                     ++userIter;
-//                 }
-//             }
-//             std::cout << userIter->UserToString() << std::endl;
-//             TransactionMode(start,*userIter);
-//         }
-//         else
-//         {
-//             std::cout << "Invalid Login" << std::endl;
-//         }
-
-//     }
-// }
-// void TheaterReservationSystem::TransactionMode(bool start, User user)
-// {
-//      while(start)
-//     {
-//         std::cout << "[R]eserve    [V]iew    [C]ancel    [O]ut" << std::endl;
-//         char choice{' '};
-//         std::cin >> choice;
-//         choice = (std::toupper(choice));
-//         switch(choice)
-//         {
-//             case 'R':
-//                 std::cout << "Reserve" << std::endl;
-//                 ReservationSession(true,user);
-//                 break;
-//             case 'V':
-//                 std::cout << "View" << std::endl;
-//                 ViewReservations(true,user);
-//                 break;
-//             case 'C':
-//                 std::cout << "Cancel" << std::endl;
-//                 CancelReservation(true,user);
-//                 break;
-//             case 'O':
-//                 std::cout << "Out" << std::endl;
-//                 break;
-//             default:
-//                 std::cout << "Invalid Input" << std::endl;
-//                 break;
-//         }
-//     }
-// }
-// std::vector<Show> TheaterReservationSystem::GetShows() const
-// {
-//     return showDatabase_;
-// }
-// void TheaterReservationSystem::ReservationSession(bool start,User& user)
-// {
-//     // std::unordered_map<std::string,std::vector<std::string>>reservations;
-
-//     //going to read show date data mapped to vector of reserved seats
-
-//     //will iterate through data and populate user's reservations
-
-//     std::unordered_map<std::string,std::vector<std::string>> reservationString;
-//     std::vector<std::string> chosenSeats;
-
-//     while(start)
-//     {
-//         std::string dateString("");
-//         std::string timeString("");
-//         DisplayShows();
-//         std::cout << "Enter a date" << std::endl;
-//         std::cin >> dateString;
-//         std::cout << "Enter a time" << std::endl;
-//         std::cin >> timeString;
-
-//         if(IsValidShow(dateString,timeString))
-//         {
-//             Show currentShow;
-//             for(Show show : showDatabase_)
-//             {
-//                 if(show.GetDateString() == dateString && show.GetTimeString() == timeString)
-//                 {
-//                     currentShow = show;
-//                     break;
-//                 }
-//             }
-//             currentShow.DisplaySeats();
-//             bool selectingSeats(false);
-
-//             //we are selecting seats
-
-//             // //if seat can be found in data base, insert date time : vector<string> to map of seat reservations
-//             while(selectingSeats)
-//             {
-//                 std::cout << "Enter a seatId: (or press Q to quit) " << std::endl;
-//                 std::string seatId("");
-//                 std::cin >> seatId;
-//                 if(seatId == "Q" || seatId == "q")
-//                 {
-//                     break;
-//                 }
-//                 else if(currentShow.IsValidSeat(seatId))
-//                 {
-//                     if(currentShow.GetSeat(seatId).IsAvailabile())
-//                     {
-//                         bool alreadySelectedSeat(false);
-//                         for(std::string id: chosenSeats)
-//                         {
-//                             if(id == seatId)
-//                             {
-//                                 alreadySelectedSeat = true;
-//                                 break;
-//                             }
-
-//                         }
-//                         if(alreadySelectedSeat)
-//                         {
-//                             std::cout << "Already selected seat";
-//                         }
-//                         else
-//                         {
-//                             chosenSeats.push_back(seatId);
-//                         }
-//                         // std::string dateTime = dateString + "|" + timeString;
-
-//                         // std::unordered_map<std::string,std::vector<std::string>>::iterator itr = reservationString.find(dateTime);
-//                         // if(itr == reservationString.end())
-//                         // {
-//                         //     std::vector<std::string> emptyVector;
-//                         //     reservationString.insert({dateTime,emptyVector});
-
-//                         // }
-//                         // else
-//                         // {
-
-//                         // }
-
-//                         // selectedSeats.push_back(seatId);
-//                     }
-//                     else
-//                     {
-//                         std::cout << "Seat unavailable." << std::endl;
-//                     }
-
-//                     std::cout << "Done selecting seats(Y/N)?" << std::endl;
-//                     char choice{' '};
-//                     std::cin >> choice;
-//                     choice = (std::toupper(choice));
-//                     bool selectingChoice(true);
-//                     while(selectingChoice)
-//                     {
-//                         if(choice == 'Y')
-//                         {
-
-//                         }
-//                         else if(choice =='N')
-//                         {
-
-//                         }
-//                         else
-//                         {
-//                             std::cout << "Invalid Input" << std::endl;
-//                         }
-//                     }
-//                 // while(s                  char choice{' '};
-//                     std::cin >> choice;
-//                     choice = (std::toupper(choice));
-//                     bool selectingChoice(true);electingChoice)
-//                 // {
-//                 //     if(choice == 'Y')
-//                 //     {
-//                 //         selectingSeats = false;
-//                 //         std::cout << "Done reserving for show:\nDate: " << dateString<<"\nTime: " << timeString << std::endl;
-//                 //         std::string dateTimeString = dateString + "|" + timeString;
-//                 //         std::vector<std::string> emptyVector;
-//                 //         reservationString.insert({dateTimeString,emptyVector});
-//                 //         std::unordered_map<std::string,std::vector<std::string>>::iterator itr = reservationString.find(dateTimeString);
-//                 //         if(itr == reservationString.end())
-//                 //         {
-
-//                 //         }
-
-//                 //         break;
-//                 //     }
-//                 //     else if(choice == 'N')
-//                 //     {
-//                 //         selectingChoice = false;
-//                 //     }
-//                 //     else
-//                 //     {
-//                 //         std::cout << "Invalid choice" << std::endl;
-//                 //     }
-//                 // }
-//                 }
-//                 else
-//                 {
-//                     std::cout << "Cannot find seat" << std::endl;
-//                 }
-
-//             }
-
-//         }
-//         else
-//         {
-//             std::cout << "Cannot find show" << std::endl;
-//         }
-
-//         std::cout << "Are you done making reservations? [Y/N]" << std::endl;
-//         char choice{' '};
-//         std::cin >> choice;
-//         choice = (std::toupper(choice));
-//         bool selectingChoice(true);
-//         while(selectingChoice)
-//         {
-//             if(choice == 'Y')
-//         {
-//             selectingChoice = false;
-//             start = false;
-//         }
-//         else if(choice == 'N')
-//         {
-//             selectingChoice = false;
-
-//         }
-//         else
-//         {
-//             std::cout << "Invalid choice" << std::endl;
-//         }
-//         }
-
-//         // if(IsValidShow(dateString,timeString))
-//         // {
-//         //     std::cout << "Found Valid Show" << std::endl;
-
-//         //     Show currentShow;
-//         //     for(Show show : GetShows())
-//         //     {
-//         //         if(show.GetDateString() == dateString && show.GetTimeString() == timeString)
-//         //         {
-//         //             currentShow = show;
-//         //             break;
-//         //         }
-//         //     }
-//         //     bool selectingSeats(true);
-//         //     while(selectingSeats)
-//         //     {
-//         //         currentShow.DisplaySeats();
-//         //         std::cout << "Select a seat: (or press Q to quit) " << std::endl;
-//         //         std::string seatId("");
-//         //         std::cin >> seatId;
-//         //         if(seatId == "Q" || seatId == "q")
-//         //         {
-//         //             break;
-//         //         }
-
-//         //         for(Seat s : currentShow.GetSeats())
-//         //         {
-//         //             if(s.GetSeatId() == seatId)
-//         //             {
-//         //                 if(s.IsAvailabile())
-//         //                 {
-//         //                     seatReservations.push_back(seatId);
-//         //                 }
-//         //                 else
-//         //                 {
-//         //                     std::cout << "Seat unavailable" << std::endl;
-//         //                 }
-//         //             }
-//         //                 break;
-//         //         }
-//         //     }
-
-//         //     std::cout << currentShow.GetDateString();
-//         //     std::cout << currentShow.GetTimeString();
-//         // }
-//         // else
-//         // {
-//         //     std::cout << "Cannot find show" << std::endl;
-//         // }
-//     }
-// /*
-
-// reservatons:
-// date | time : reservations { a,b,c,....n }
-
-// loop:
-//     enter date
-//     enter time
-//     if date == q or Q:
-//         if
-
-// */
-//     // while(start)
-//     // {
-//     //     DisplayShows();
-
-//     //     std::string date("");
-//     //     std::string time("");
-//     //     std::vector<std::string> selectedSeats;
-
-//     //     std::cout << "Enter a show date:(Enter Q to quit) " << std::endl;
-//     //     std::cin >> date;
-//     //     if(time == "Q" || time == "q")
-//     //     {
-//     //         std::cout << "Goodbye" << std::endl;
-//     //         if(!reservations.empty())
-//     //         {
-//     //             std::unordered_map<std::string,std::vector<std::string>>::iterator datetimeIter = reservations.begin();
-//     //             while(datetimeIter != reservations.end())
-//     //             {
-//     //                 std::string dateTime = datetimeIter->first;
-//     //                 std::vector<std::string> splitDateTime = SingleDelimeterStringSplit(dateTime,'|');
-//     //                 std::cout << splitDateTime.size();
-
-//     //             }
-//     //         }
-//     //         break;
-//     //     }
-
-//     //     std::cout << "Enter a show time:(Enter Q to quit) " << std::endl;
-//     //     std::cin >> time;
-
-//     //     if(time == "Q" || time == "q")
-//     //     {
-//     //         std::cout << "Goodbye" << std::endl;
-//     //         if(!reservations.empty())
-//     //         {
-//     //             std::unordered_map<std::string,std::vector<std::string>>::iterator datetimeIter = reservations.begin();
-//     //             while(datetimeIter != reservations.end())
-//     //             {
-//     //                 std::string dateTime = datetimeIter->first;
-//     //                 std::vector<std::string> splitDateTime = SingleDelimeterStringSplit(dateTime,'|');
-//     //                 std::cout << splitDateTime.size();
-
-//     //             }
-//     //         }
-//     //         break;
-//     //     }
-
-//     //     std::vector<Show>::iterator showIter = showDatabase_.begin();
-//     //     if(IsValidShow(date,time))
-//     //     {
-//     //         while(showIter != showDatabase_.end())
-//     //         {
-//     //             if(showIter->GetDateString() == date && showIter->GetTimeString() == time)
-//     //             {
-//     //                 break;
-//     //             }
-//     //             else
-//     //             {
-//     //                 ++showIter;
-//     //             }
-//     //         }
-//     //         bool selectingSeats(true);
-//     //         while(selectingSeats)
-//     //         {
-//     //             showIter->DisplaySeats();
-//     //             std::cout << "Enter a seatId: " << std::endl;
-//     //             std::string seatId("");
-//     //             std::cin >> seatId;
-//     //             if(showIter->IsValidSeat(seatId))
-//     //             {
-//     //                 for(Seat s : showIter->GetSeats())
-//     //                 {
-//     //                     if(s.GetSeatId() == seatId)
-//     //                     {
-
-//     //                     }
-//     //                 }
-//     //             }
-
-//     //         }
-//     //     }
-
-//         // if(IsValidShow(date,time))
-//         // {
-//         //     while(showIter != showDatabase_.end())
-//         //     {
-//         //         if(showIter->GetDateString() == date && showIter->GetTimeString() == time)
-//         //         {
-//         //             break;
-//         //         }
-//         //         else
-//         //         {
-//         //             ++showIter;
-//         //         }
-//         //     }
-
-//         //     showIter->DisplaySeats();
-//         //     bool selectingSeats(true);
-//         //     while(selectingSeats)
-//         //     {
-//         //         std::cout << "Enter a seat Id: (Enter Q to quit) " << std::endl;
-//         //         std::string seatId("");
-//         //         std::cin >> seatId;
-//         //         if(seatId == "Q" || seatId == "q")
-//         //         {
-//         //             std::cout << "Done selecting" << std::endl;
-//         //             break;
-//         //         }
-//         //         bool seatTaken(false);
-//         //         for(std::string selection : reservations)
-//         //         {
-//         //             if(selection == seatId)
-//         //             {
-//         //                 std::cout << "Seat has already been selected!" << std::endl;
-//         //                 seatTaken = true;
-//         //                 break;
-//         //             }
-//         //         }
-//         //         if(!seatTaken)
-//         //         {
-//         //             reservations.push_back(seatId);
-//         //         }
-
-//         //     }
-//         // }
-//         // else
-//         // {
-//         //     std::cout << "Cannot find show" << std::endl;
-//         // }
-
-//         // bool selectingSeats{true};
-//         // std::vector<std::string> reservedSeatIds;
-
-//         // while(selectingSeats)
-//         // {
-//         //     std::cout << "Select a seat: " << std::endl;
-//         //     std::string seatId{""};
-//         //     std::cin >> seatId;
-//         //     if(show.GetSeat(seatId).GetAvailability() == false)
-//         //     {
-//         //         std::cout << "Seat is unavailable" << std::endl;
-//         //     }
-//         //     else
-//         //     {
-//         //         reservedSeatIds.push_back(seatId);
-//         //     }
-//         //     char choice{' '};
-//         //     bool continuing{true};
-//         //     std::cout << "Continue? [Y/N]" << std::endl;
-//         //     std::cin >> choice;
-//         //     choice = (std::toupper(choice));
-//         //     while(continuing)
-//         //     {
-//         //         if(choice == 'N')
-//         //         {
-//         //             continuing = false;
-//         //             selectingSeats = false;
-//         //             for(std::string seatId : reservedSeatIds)
-//         //             {
-//         //                 show.UpdateSeatAvailability(seatId,false);
-//         //                 reservation.AddSeat(show.GetSeat(seatId));
-//         //             }
-//         //             UpdateShow(show);
-//         //         }
-//         //         else if(choice == 'Y')
-//         //         {
-//         //             continuing = false;
-//         //         }
-//         //         else
-//         //         {
-//         //             std::cout << "Invalid Input" << std::endl;
-//         //         }
-//         //     }
-
-//         // }
-//         // user.AddReservation(reservation);
-//     // }
-// }
-// void TheaterReservationSystem::ViewReservations(bool start, User user) const
-// {
-
-// }
-// void TheaterReservationSystem::CancelReservation(bool start,User user)
-// {
-
-// }
-// void TheaterReservationSystem::UpdateShow(Show show)
-// {
-
-// }
-// bool TheaterReservationSystem:: HasUsername(std::string username,std::string password)
-// {
-//     for(User user : userDatabase_)
-//     {
-//         if(user.GetUsername() == username && user.GetPassword() == password)
-//         {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
-// bool TheaterReservationSystem:: IsValidShow(std::string showDate, std::string showTime)
-// {
-//     for(Show show : showDatabase_)
-//     {
-//         if(show.GetDateString() == showDate && show.GetTimeString() == showTime)
-//         {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
-
-// // void TheaterReservationSystem:: SignUp(bool start)
-// // {
-// //     while(start)
-// //     {
-// //         std::string username{""};
-
-// //         std::string password{""};
-// //         std::cout << "Enter a username: " << std::endl;
-// //         std::cin >> username;
-// //         std::cout << "Enter a password: " << std::endl;
-// //         std::cin >> password;
-// //         bool usernameTaken{false};
-// //         for(User user: userDatabase_)
-// //         {
-// //             if(user.GetUsername() == username)
-// //             {
-// //                 usernameTaken = true;
-// //                 break;
-// //             }
-// //         }
-// //         if(!usernameTaken)
-// //         {
-// //             User user (username,password);
-// //             userDatabase_.push_back(user);
-// //             start = false;
-// //             std::cout << "Finished signing up" << std::endl;
-// //         }
-// //     }
-// // }
-// // void TheaterReservationSystem::SignIn(bool start)
-// // {
-// //     while(start)
-// //     {
-// //         std::cout << "Enter a username: " << std::endl;
-// //         std::string username{""};
-// //         std::cin >> username;
-// //         std::cout << "Enter a password: " << std::endl;
-// //         std::string password{""};
-// //         std::cin >> password;
-// //         bool successfulLogin{false};
-// //         for(User user : userDatabase_)
-// //         {
-// //             if(user.GetUsername() == username && user.GetPassword() == password)
-// //             {
-// //                 successfulLogin = true;
-// //                 break;
-// //             }
-// //         }
-// //         if(successfulLogin)
-// //         {
-// //             User user = GetUser(username,password);
-// //             TransactionMode(start,user);
-// //             start = false;
-// //         }
-// //         else
-// //         {
-// //             std::cout << "Invalid Login!" << std::endl;
-// //         }
-
-// //         // if(hasUsername)
-// //         // {
-
-// //         //     bool hasPassword{false};
-// //         //     for(User user : userDatabase_)
-// //         //     {
-// //         //         if(user.GetPassword() == password)
-// //         //         {
-// //         //             hasPassword = true;
-// //         //             break;
-// //         //         }
-// //         //     }
-
-// //         //     if(hasPassword)
-// //         //     {
-// //         //         std::cout << "Successful Login" << std::endl;
-// //         //         //Login
-// //         //         User user = GetUser(username,password);
-// //         //         TransactionMode(true,user);
-
-// //         //     }
-// //         //     else
-// //         //     {
-// //         //         std::cout << "Invalid password" << std::endl;
-// //         //     }
-
-// //     }
-// // }
-
-// // void TheaterReservationSystem:: TransactionMode(bool start, User user)
-// // {
-// //     while(start)
-// //     {
-// //         std::cout << "[R]eserve    [V]iew    [C]ancel    [O]ut" << std::endl;
-// //         char choice{' '};
-// //         std::cin >> choice;
-// //         choice = (std::toupper(choice));
-// //         switch(choice)
-// //         {
-// //             case 'R':
-// //                 std::cout << "Reserve" << std::endl;
-// //                 ReservationSession(true,user);
-// //                 break;
-// //             case 'V':
-// //                 std::cout << "View" << std::endl;
-// //                 ViewReservations(true,user);
-// //                 break;
-// //             case 'C':
-// //                 std::cout << "Cancel" << std::endl;
-// //                 CancelReservation(true,user);
-// //                 break;
-// //             case 'O':
-// //                 std::cout << "Out" << std::endl;
-// //                 break;
-// //             default:
-// //                 std::cout << "Invalid Input" << std::endl;
-// //                 break;
-// //         }
-// //     }
-// // }
-// // void TheaterReservationSystem:: ReservationSession(bool start, User& user)
-// // {
-// //     while(start)
-// //     {
-// //         DisplayShows();
-// //         std::cout << "Select a show time: " << std::endl;
-// //         bool selectingShow{true};
-
-// //         std::string date{""};
-// //         std::string time{""};
-// //         std::cout << "Enter a date: [Q to quit]" << std::endl;
-// //         std::cin >> date;
-// //         if(date == "Q" || date == "q")
-// //         {
-// //             std::cout << "exiting reservation" << std::endl;
-// //             break;
-// //         }
-// //         std::cout << "Enter a time: [Q to quit]" << std::endl;
-// //         std::cin >> time;
-// //         if(time == "Q" || time == "q")
-// //         {
-// //             std::cout << "exiting reservation" << std::endl;
-// //             break;
-// //         }
-
-// //         Show show = GetShow(date,time);
-// //         Show reservation(show.GetTime(),show.GetDate());
-
-// //         show.DisplayAllSeats();
-
-// //         bool selectingSeats{true};
-// //         std::vector<std::string> reservedSeatIds;
-
-// //         while(selectingSeats)
-// //         {
-// //             std::cout << "Select a seat: " << std::endl;
-// //             std::string seatId{""};
-// //             std::cin >> seatId;
-// //             if(show.GetSeat(seatId).GetAvailability() == false)
-// //             {
-// //                 std::cout << "Seat is unavailable" << std::endl;
-// //             }
-// //             else
-// //             {
-// //                 reservedSeatIds.push_back(seatId);
-// //             }
-// //             char choice{' '};
-// //             bool continuing{true};
-// //             std::cout << "Continue? [Y/N]" << std::endl;
-// //             std::cin >> choice;
-// //             choice = (std::toupper(choice));
-// //             while(continuing)
-// //             {
-// //                 if(choice == 'N')
-// //                 {
-// //                     continuing = false;
-// //                     selectingSeats = false;
-// //                     for(std::string seatId : reservedSeatIds)
-// //                     {
-// //                         show.UpdateSeatAvailability(seatId,false);
-// //                         reservation.AddSeat(show.GetSeat(seatId));
-// //                     }
-// //                     UpdateShow(show);
-// //                 }
-// //                 else if(choice == 'Y')
-// //                 {
-// //                     continuing = false;
-// //                 }
-// //                 else
-// //                 {
-// //                     std::cout << "Invalid Input" << std::endl;
-// //                 }
-// //             }
-
-// //         }
-// //         user.AddReservation(reservation);
-// //     }
-// // }
-
-// // void TheaterReservationSystem:: DisplayShows() const
-// // {
-// //     std::cout << std::endl;
-// //     for(Show show : showDatabase_)
-// //     {
-// //         std::cout << show.ShowToString() << std::endl;
-// //     }
-// // }
-
-// // Show TheaterReservationSystem:: GetShow(std::string date,std::string time) const
-// // {
-// //     Show showVar;
-// //     for(Show show: showDatabase_)
-// //     {
-// //         if(show.GetDateString() == date && show.GetTimeString() == time)
-// //         {
-// //             showVar = show;
-// //             return showVar;
-// //         }
-// //     }
-// //     std::cout << "Cannot find show!" << std::endl;
-// //     return showVar;
-// // }
-
-// // void TheaterReservationSystem::UpdateShow(Show input)
-// // {
-// //     for(Show& show : showDatabase_)
-// //     {
-// //         if(show.GetDateString() == input.GetDateString() && show.GetTimeString() == input.GetTimeString())
-// //         {
-// //             show = input;
-// //             break;
-// //         }
-// //     }
-// // }
-// // void TheaterReservationSystem::ViewReservations(bool start, User user) const
-// // {
-// //     while(start)
-// //     {
-// //         std::cout << "[A] View Reservations\n[B] View Reservation\n[Q] Quit" << std::endl;
-// //         char choice{' '};
-// //         std::cin >> choice;
-// //         choice = (std::toupper(choice));
-// //         if(choice == 'A')
-// //         {
-// //             std::vector<Show> reservations = user.GetReservations();
-// //             std::cout << "Reservations: " << std::endl;
-// //             for(Show reservation : reservations)
-// //             {
-// //                 std::cout << reservation.ShowToString() << std::endl;
-// //                 for(Seat seat : reservation.GetSeats())
-// //                 {
-// //                     std::cout << seat.SeatToString() << std::endl;
-// //                 }
-// //             }
-// //         }
-// //         else if(choice == 'B')
-// //         {
-// //             std::string date{""};
-// //             std::cout << "Enter a date: " << std::endl;
-// //             std::cin >> date;
-// //             std::vector<Show> reservations = user.GetReservations();
-// //             std::cout << "Reservations: " << std::endl;
-// //             for(Show reservation : reservations)
-// //             {
-// //                 if(reservation.GetDateString() == date)
-// //                 {
-// //                     std::cout << reservation.ShowToString() << std::endl;
-// //                     for(Seat seat : reservation.GetSeats())
-// //                     {
-// //                         std::cout << seat.SeatToString() << std::endl;
-// //                     }
-// //                 }
-// //             }
-// //         }
-// //         else if(choice == 'Q')
-// //         {
-// //             break;
-// //         }
-// //         else
-// //         {
-// //             std::cout << "Invalid Input" << std::endl;
-// //         }
-// //     }
-// // }
-// // void TheaterReservationSystem:: CancelReservation(bool start,User user)
-// // {
-// //     std::string date{""};
-// //     std::string time{""};
-
-// //     std::cout << "Enter a date: " << std::endl;
-// //     std::cin >> date;
-// //     std::cout << "Enter a time: " << std::endl;
-// //     std::cin >> time;
-// //     user.DisplayReservation(date,time);
-// //     Show show = user.GetReservation(date,time);
-// //     bool selectingSeats{true};
-// //     std::vector<std::string> cancelReservedSeatIds;
-
-// //     while(selectingSeats)
-// //     {
-// //         std::cout << "Select a seat: " << std::endl;
-// //         std::string seatId{""};
-// //         std::cin >> seatId;
-// //         bool foundSeat{false};
-// //         for(Seat seat : show.GetSeats())
-// //         {
-// //             if(seatId == seat.GetSeatId())
-// //             {
-// //                 foundSeat = true;
-// //                 break;
-// //             }
-// //         }
-// //         if(foundSeat)
-// //         {
-// //             cancelReservedSeatIds.push_back(seatId);
-// //         }
-// //         else
-// //         {
-// //             std::cout << "Seat noasdsadt found" << std::endl;
-// //         }
-
-// //         // for(Show show : )
-// //         // {
-// //         //     for(Seat seat : show.GetSeats())
-// //         //     {
-// //         //         if(seatId == seat.GetSeatId())
-// //         //         {
-// //         //             foundSeat = true;
-// //         //             break;
-// //         //         }
-// //         //     }
-// //         // }
-
-// //         char choice{' '};
-// //         bool continuing{true};
-
-// //         while(continuing)
-// //         {
-// //             std::cout << "Continue? [Y/N]" << std::endl;
-// //             std::cin >> choice;
-// //             choice = (std::toupper(choice));
-// //             if(choice == 'N')
-// //             {
-// //                 continuing = false;
-// //                 selectingSeats = false;
-// //                 user.clearallreserves();
-// //                 std::cout << user.GetReservations().size() << std::endl;
-
-// //                 // for(std::string seatId : cancelReservedSeatIds)
-// //                 // {
-// //                 //     user.RemoveReservations(date,time,seatId);
-// //                 // }
-// //                 // for(std::string seatid : cancelReservedSeatIds)
-// //                 // {
-// //                 //     // user.RemoveReservation(seatId);
-// //                 // }
-
-// //                 //update show's seat availability
-
-// //                 // Show updatedShow;
-// //                 // if(reservedSeatIds.empty())
-// //                 // {
-// //                 //     std::cout << "No reserved seats" << std::endl;
-// //                 // }
-// //                 // else
-// //                 // {
-// //                 //     for(std::string seatId : reservedSeatIds)
-// //                 //     {
-// //                 //         user.RemoveReservation(seatId,reservation,updatedShow);
-// //                 //     }
-// //                 // }
-
-// //                 // UpdateShow(updatedShow);
-
-// //                 // // UpdateShow(updatedShow);
-
-// //                 // for(Show& show : showDatabase_)
-// //                 // {
-// //                 //     if(show.GetDateString() == input.GetDateString() && show.GetTimeString() == input.GetTimeString())
-// //                 //     {
-// //                 //         show = input;
-// //                 //         break;
-// //                 //     }
-// //                 // }
-
-// //             }
-// //             else if(choice == 'Y')
-// //             {
-// //                 continuing  = false;
-
-// //             }
-// //             else
-// //             {
-// //                 std::cout << "Invalid input" << std::endl;
-// //             }
-// //         }
-// //             // while(continuing)
-// //             // {
-// //             //     if(choice == 'N')
-// //             //     {
-// //             //         continuing = false;
-// //             //         selectingSeats = false;
-// //             //         for(std::string seatId : reservedSeatIds)
-// //             //         {
-// //             //             show.UpdateSeatAvailability(seatId);
-// //             //             reservation.AddSeat(show.GetSeat(seatId));
-// //             //         }
-// //             //         UpdateShow(show);
-// //             //     }
-// //             //     else if(choice == 'Y')
-// //             //     {
-// //             //         continuing = false;
-// //             //     }
-// //             //     else
-// //             //     {
-// //             //         std::cout << "Invalid Input" << std::endl;
-// //             //     }
-// //     }
-
-// //         // while(selectingSeats)
-// //         // {
-// //         //     std::cout << "Select a seat: " << std::endl;
-// //         //     std::string seatId{""};
-// //         //     std::cin >> seatId;
-// //         //     if(show.GetSeat(seatId).GetAvailability() == false)
-// //         //     {
-// //         //         std::cout << "Seat is unavailable" << std::endl;
-// //         //     }
-// //         //     else
-// //         //     {
-// //         //         reservedSeatIds.push_back(seatId);
-// //         //     }
-// //         //     char choice{' '};
-// //         //     bool continuing{true};
-// //         //     std::cout << "Continue? [Y/N]" << std::endl;
-// //         //     std::cin >> choice;
-// //         //     choice = (std::toupper(choice));
-// //         //     while(continuing)
-// //         //     {
-// //         //         if(choice == 'N')
-// //         //         {
-// //         //             continuing = false;
-// //         //             selectingSeats = false;
-// //         //             for(std::string seatId : reservedSeatIds)
-// //         //             {
-// //         //                 show.UpdateSeatAvailability(seatId);
-// //         //                 reservation.AddSeat(show.GetSeat(seatId));
-// //         //             }
-// //         //             UpdateShow(show);
-// //         //         }
-// //         //         else if(choice == 'Y')
-// //         //         {
-// //         //             continuing = false;
-// //         //         }
-// //         //         else
-// //         //         {
-// //         //             std::cout << "Invalid Input" << std::endl;
-// //         //         }
-// //         //     }
-
-// // }
+void TheaterReservationSystem::Out(User *user)
+{
+    std::cout << " ==== Displaying Transaction Receipt ==== " << std::endl;
+    // temp confirmation number
+    std::cout << "Confirmation Number 1" << std::endl;
+    // set the reserved seats as unavailable so other users dont reserve the seats
+
+    // user->DisplayReservations();
+    std::map<std::string, Show> reservations = user->GetReservations();
+    double totalPrice(0.0);
+
+    std::map<std::string, Show>::iterator iter = reservations.begin();
+    while (iter != reservations.end())
+    {
+        std::cout << "Show: " << iter->second.ToString() << std::endl;
+        double showPrice(0.0);
+        std::vector<Seat> seats = iter->second.GetSeats();
+        for (Seat seat : seats)
+        {
+            reserveSeat(iter->second.GetDateString(), iter->second.GetTimeString(), seat.GetSeatId());
+            std::cout << seat.GetSeatId() << std::endl;
+            showPrice += seat.GetPrice();
+        }
+        if (iter->second.GetDate().tm_mon == 12 && (iter->second.GetDate().tm_mday != 27 || iter->second.GetDate().tm_mday != 26))
+        {
+            if (seats.size() > 4 && seats.size() < 11)
+            {
+                double discount = 2.0 * seats.size();
+                showPrice -= discount;
+            }
+            if (seats.size() > 10 && seats.size() < 21)
+            {
+                double discount = 5.0 * seats.size();
+                showPrice -= discount;
+            }
+        }
+
+        totalPrice += showPrice;
+
+        ++iter;
+    }
+    std::cout << "Total Price: " << totalPrice << std::endl;
+}

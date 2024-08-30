@@ -1,26 +1,24 @@
 #include "user.h"
 
-User::User(std::string username,std::string password) : username_(username),password_(password) 
+User::User(std::string username, std::string password) : username_(username), password_(password)
 {
-
 }
 
 User::~User()
 {
-
 }
 
-std::string User::GetUsername() const 
+std::string User::GetUsername() const
 {
     return username_;
 }
 
-std::string User::GetPassword() const 
+std::string User::GetPassword() const
 {
     return password_;
 }
 
-std::string User::ToString() const 
+std::string User::ToString() const
 {
     return username_ + "|" + password_;
 }
@@ -33,46 +31,43 @@ void User::SetPassword(const std::string password)
 void User::AddReservation(Show show)
 {
     std::string dateTime = show.GetDateString() + show.GetTimeString();
-    reservations.insert({dateTime,show});
+    reservations.insert({dateTime, show});
 }
 
 void User::DisplayReservations()
-{   
+{
     std::vector<Show> sortedReservations = SortReservations();
-    for(Show show : sortedReservations)
+    for (Show show : sortedReservations)
     {
-        std::cout << show.ToString() << std::endl; 
+        std::cout << show.ToString() << std::endl;
         show.DisplaySeats();
     }
-
 }
-
 
 std::vector<Show> User::SortReservations()
 {
     std::vector<Show> sortedReservations;
-    if(!reservations.empty())
+    if (!reservations.empty())
     {
-        std::map<std::string,Show>::iterator iter = reservations.begin();
-        while(iter != reservations.end())
+        std::map<std::string, Show>::iterator iter = reservations.begin();
+        while (iter != reservations.end())
         {
             sortedReservations.push_back(iter->second);
             ++iter;
         }
     }
 
-    std::sort(sortedReservations.begin(),sortedReservations.end(),CompareShows);
+    std::sort(sortedReservations.begin(), sortedReservations.end(), CompareShows);
 
     return sortedReservations;
-
 }
 
-Show* User::FindReservation(std::string date,std::string time)
+Show *User::FindReservation(std::string date, std::string time)
 {
-    std::map<std::string,Show>::iterator iter = reservations.begin();
-    while(iter != reservations.end())
+    std::map<std::string, Show>::iterator iter = reservations.begin();
+    while (iter != reservations.end())
     {
-        if(iter->second.GetDateString() == date && iter->second.GetTimeString() == time)
+        if (iter->second.GetDateString() == date && iter->second.GetTimeString() == time)
         {
             return &iter->second;
         }
@@ -80,24 +75,32 @@ Show* User::FindReservation(std::string date,std::string time)
     }
     return nullptr;
 }
-void User::CancelReservation(std::string date, std::string time,std::string seatId)
+void User::CancelReservation(std::string date, std::string time, std::string seatId)
 {
-    Show* reservation = FindReservation(date,time);
+    Show *reservation = FindReservation(date, time);
     reservation->RemoveSeat(seatId);
 }
 
-unsigned int User:: GetReservationSize() const
+unsigned int User::GetReservationSize() const
 {
     return reservations.size();
 }
+std::map<std::string,Show> User::GetReservations() const 
+{
+    return reservations;
+}
 
-
-
-// std::string User::UserToString() 
+// double User::CalculateReservationTotalPrice()
 // {
-//     return "Username: "  + username_ + "Password: " + password_; 
+//     double total(0.0);
+
+//     return total;
 // }
 
+// std::string User::UserToString()
+// {
+//     return "Username: "  + username_ + "Password: " + password_;
+// }
 
 // void User:: AddReservation(Show show)
 // {
@@ -116,10 +119,10 @@ unsigned int User:: GetReservationSize() const
 //             {
 //                 if(seat.GetSeatId() == seatId)
 //                 {
-//                     std::cout << "Found seat: " << seatId << std::endl; 
+//                     std::cout << "Found seat: " << seatId << std::endl;
 //                     show.UpdateSeatAvailability(seatId,false);
 //                     // reservation.AddSeat(seat);
-                    
+
 //                     break;
 //                 }
 //             }
@@ -132,7 +135,7 @@ unsigned int User:: GetReservationSize() const
 //     //     for(Show& show : showDatabase)
 //     //     {
 //     //         if(show.GetDateString() == reservation.GetDateString() && show.GetTimeString() == reservation.GetTimeString())
-//     //         {   
+//     //         {
 //     //             show.UpdateSeatAvailability(seatId,false);
 //     //             break;
 //     //         }
@@ -153,7 +156,7 @@ unsigned int User:: GetReservationSize() const
 //             {
 //                 if(seat.GetSeatId() == seatId)
 //                 {
-//                     std::cout << "Found seat: " << seatId << std::endl; 
+//                     std::cout << "Found seat: " << seatId << std::endl;
 //                     show.UpdateSeatAvailability(seatId,true);
 //                     break;
 //                 }
@@ -167,7 +170,7 @@ unsigned int User:: GetReservationSize() const
 //     //     for(Show& show : showDatabase)
 //     //     {
 //     //         if(show.GetDateString() == showDate && show.GetTimeString() == showTime)
-//     //     {   
+//     //     {
 //     //         show.UpdateSeatAvailability(seatId,true);
 //     //         break;
 //     //     }
@@ -175,19 +178,19 @@ unsigned int User:: GetReservationSize() const
 //     // }
 
 // }
-// void User::DisplayReservations() const 
+// void User::DisplayReservations() const
 // {
 //     if(!reservations_.empty())
 //     {
 //         for(Show show : reservations_)
 //         {
-//             std::cout << show.ToString() << std::endl; 
+//             std::cout << show.ToString() << std::endl;
 //             show.DisplaySeats();
 //         }
 //     }
 //     else
 //     {
-//         std::cout << "No reservations" << std::endl; 
+//         std::cout << "No reservations" << std::endl;
 //     }
 // }
 // void User::SortReservations() const
@@ -195,12 +198,11 @@ unsigned int User:: GetReservationSize() const
 
 // }
 
-
-// // std::string User::GetUsername() const 
+// // std::string User::GetUsername() const
 // // {
 // //     return username_;
 // // }
-// // std::string User::GetPassword() const 
+// // std::string User::GetPassword() const
 // // {
 // //     return password_;
 // // }
@@ -214,7 +216,7 @@ unsigned int User:: GetReservationSize() const
 // //     reservations_.push_back(reservation);
 // // }
 
-// // std::vector<Show> User::GetReservations() const 
+// // std::vector<Show> User::GetReservations() const
 // // {
 // //     return reservations_;
 // // }
@@ -230,9 +232,9 @@ unsigned int User:: GetReservationSize() const
 // //             return tmp;
 // //         }
 // //     }
-// //     return tmp; 
+// //     return tmp;
 // // }
-// // void User::DisplayReservation(std::string date, std::string time) const 
+// // void User::DisplayReservation(std::string date, std::string time) const
 // // {
 // //     for(Show reservation : reservations_)
 // //     {
@@ -240,7 +242,7 @@ unsigned int User:: GetReservationSize() const
 // //         {
 // //             for(Seat seat : reservation.GetSeats())
 // //             {
-// //                 std::cout << seat.GetSeatId() << std::endl; 
+// //                 std::cout << seat.GetSeatId() << std::endl;
 // //             }
 // //         }
 // //     }
@@ -251,10 +253,10 @@ unsigned int User:: GetReservationSize() const
 // // }
 // // // void User::RemoveReservations(Show show, std::string seatId)
 // // //         {
-            
+
 // // //             for(Show& show: ref)
 // // //             {
-                
+
 // // //                 if(show.GetDateString() == showDate && show.GetTimeString() == showTime)
 // // //                 {
 // // //                     std::cout << "Before;" << std::endl;
@@ -262,7 +264,7 @@ unsigned int User:: GetReservationSize() const
 // // //                     {
 // // //                         std::cout << s.SeatToString() << std::endl;
 // // //                     }
-            
+
 // // //                     show.removeallseats();
 // // //                     reservations_= ref;
 
@@ -274,9 +276,7 @@ unsigned int User:: GetReservationSize() const
 // // //                     break;
 // // //                 }
 // // //             }
-            
 
-            
 // // //             for(Show& show : reservations_)
 // // //             {
 // // //                 if(show.GetDateString() == showDate && show.GetTimeString() == showTime)
@@ -288,26 +288,23 @@ unsigned int User:: GetReservationSize() const
 // // //                     if(it != show.GetSeats().end())
 // // //                     {
 // // //                         show.GetSeats().erase(it);
-                        
+
 // // //                     }
 
 // // //                 }
 // // //             }
 
-
-            
 // // //             DisplayReservation(showDate,showTime);
 
 // // //         }
 
-
 // // // void User::RemoveReservation(std::string seatId)
 // // // {
-    
+
 // // //     // {
 // // //     //     if(s.GetSeatId() == seatId)
 // // //     //     {
-            
+
 // // //     //     }
 // // //     // }
 // // // }
@@ -339,7 +336,7 @@ unsigned int User:: GetReservationSize() const
 // // // void User::RemoveReservation(std::string seatId,Show reservation,Show& newShow)
 // // // {
 // // //     std::vector<Seat>::iterator it = reservation.GetSeats().begin();
-    
+
 // // //     for(it; it != reservation.GetSeats().end(); ++it)
 // // //     {
 // // //         if(it->GetSeatId() == reservation.GetSeat(seatId).GetSeatId())
@@ -351,9 +348,8 @@ unsigned int User:: GetReservationSize() const
 // // //     }
 
 // // //     UpdateReservations(reservation);
-    
+
 // // // }
- 
 
 // // void User::UpdateReservations(Show input)
 // // {
@@ -362,7 +358,7 @@ unsigned int User:: GetReservationSize() const
 // //         if(show.GetDateString() == input.GetDateString() && show.GetTimeString() == input.GetTimeString())
 // //         {
 // //             show.UpdateSeatAvailability("eb100",true);
-// //             break; 
+// //             break;
 // //         }
 // //     }
 // // }
@@ -371,10 +367,9 @@ unsigned int User:: GetReservationSize() const
 // //     reservations_.clear();
 // // }
 
-
 // // // User:: GetReservation(std::string date) const
 // // // {
-// // //     dummy value in case no reservation is found 
+// // //     dummy value in case no reservation is found
 // // //     Show reservation;
 // // //     for(Show reservation_ : reservations_)
 // // //     {
@@ -383,7 +378,7 @@ unsigned int User:: GetReservationSize() const
 // // //             return reservation_;
 // // //         }
 // // //     }
-// // //     std::cout << "Cannot find reservation!" << std::endl; 
+// // //     std::cout << "Cannot find reservation!" << std::endl;
 // // //     return reservation;
 // // // }
 
@@ -391,7 +386,7 @@ unsigned int User:: GetReservationSize() const
 // // // {
 // // //     return reservations_;
 // // // }
-// // //need to sort based on date then time 
+// // //need to sort based on date then time
 // // // void User::ViewReservations() const
 // // // {
 // // //     std::cout << "Viewing reservations" << std::endl;
@@ -400,10 +395,9 @@ unsigned int User:: GetReservationSize() const
 // // //         std::cout << reservation.ShowToString() << std::endl;
 // // //          for(Seat seat : reservation.GetSeats())
 // // //          {
-// // //             std::cout << seat.SeatToString() << std::endl; 
+// // //             std::cout << seat.SeatToString() << std::endl;
 // // //          }
 // // //     }
-
 
 // // // }
 
@@ -425,18 +419,11 @@ unsigned int User:: GetReservationSize() const
 // // //     }
 // // // }
 
-
-
-
-
-
 // // // // bool User::addReservation(const std::string date,const std::string time)
 // // // // {
 // // // //     const std::string datetime = date + " " + time;
 
 // // // // }
-
-
 
 // // // // std::vector<Show*> User::getReservations() const
 // // // // {

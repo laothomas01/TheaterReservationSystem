@@ -34,10 +34,10 @@ std::string Seat::ToString()
     return "SeatId: " + seatId_ + " | Price: " + std::to_string(price_) + " | Available: " + std::to_string(available_) + " |\n";
 }
 
-// double Seat::GetPrice() const
-// {
-//     return price_;
-// }
+double Seat::GetPrice() const
+{
+    return price_;
+}
 
 std::string Seat::GetSeatId() const
 {

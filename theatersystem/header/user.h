@@ -52,6 +52,9 @@ class User
         void AddReservation(Show show);
         void CancelReservation(std::string date, std::string time, std::string seatId);
         Show* FindReservation(std::string date, std::string time);
+        // void CancelReservation(Show* reservation,Seat* seat);
+        // double CalculateReservationTotalPrice();
+        std::map<std::string,Show> GetReservations() const;
 
 
 
