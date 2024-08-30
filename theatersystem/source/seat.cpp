@@ -48,8 +48,3 @@ bool Seat::IsAvailabile() const
     return available_;
 }
 
-// std::string Seat::SeatToString()
-// {
-//     return "SeatId: " + seatId_ + "\nSeatPrice: " + std::to_string(price_) + "\nIsAvailabile: " + std::to_string(available_) + "\n"; 
-// }
-

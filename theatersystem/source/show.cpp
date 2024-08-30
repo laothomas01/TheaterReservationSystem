@@ -14,23 +14,6 @@ void Show::AddSeat(Seat seat)
     seats_.push_back(seat);
 }
 
-// std::vector<Seat> Show::GetSeats() const
-// {
-//     return seats_;
-// }
-
-// bool Show::IsValidSeat(std::string seatId)
-// {
-//     for(Seat seat : seats_)
-//     {
-//         if(seat.GetSeatId() == seatId)
-//         {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
-
 void Show::DisplaySeats()
 {
     for (Seat &seat : seats_)
@@ -78,24 +61,12 @@ void Show::RemoveSeat(std::string seatId)
             ++iter;
         }
     }
-    // Seat s = std::find(seats_.begin(),seats_.end(),)
 }
 
 std::vector<Seat> Show::GetSeats() const
 {
     return seats_;
 }
-// void Show::UpdateSeatAvailability(std::string seatId,bool available)
-// {
-//     for(Seat& seat : seats_)
-//     {
-//         if(seat.GetSeatId() == seatId)
-//         {
-//             seat.UpdateAvailability(available);
-//             break;
-//         }
-//     }
-// }
 
 std::tm Show::GetTime()
 {
@@ -105,17 +76,6 @@ std::tm Show::GetDate()
 {
     return date_;
 }
-
-// // void Show:: UpdateSeatAvailability(std::string seatId,bool availability)
-// // {
-// //     for(Seat& seat : seats_)
-// //     {
-// //         if(seat.GetSeatId() == seatId)
-// //         {
-// //             seat.SetAvailability(availability);
-// //         }
-// //     }
-// // }
 
 std::string Show::GetDateString() const
 {
@@ -137,41 +97,4 @@ void Show::UpdateSeatAvailability(bool available, const std::string &seatId)
     {
         seat->UpdateAvailability(available);
     }
-    // for(auto& seat : seats_)
-    // {
-    //     Seat* seat_ptr = findSeat(seatId);
-    //     if(seat_ptr)
-    //     {
-    //         seat_ptr->UpdateAvailability(available);
-    //         return;
-    //     }
-    // }
 }
-
-// // Seat Show::GetSeat(std::string seatId) const
-// // {
-// //     Seat s("",0,false);
-// //     for(Seat seat : seats_)
-// //     {
-// //         if(seat.GetSeatId() == seatId)
-// //         {
-// //             s = seat;
-// //             return s;
-// //         }
-// //     }
-// //     return s;
-// // }
-// std::string Show::ShowToString()
-// {
-//     return "Date: " + GetDateString() + " Time: " + GetTimeString();
-// }
-
-// // std::vector<Seat> Show:: GetSeats()
-// // {
-// //     return seats_;
-// // }
-
-// // void Show::removeallseats()
-// // {
-// //     seats_.clear();
-// // }

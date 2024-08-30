@@ -20,8 +20,6 @@ class Seat
         bool IsAvailabile() const;
         std::string GetSeatId() const;
         double GetPrice() const;
-        // std::string SeatToString(); 
-    
     
 };
 #endif
